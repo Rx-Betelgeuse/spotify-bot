@@ -15,9 +15,9 @@ exports.grabSongTitle = async (url) => {
     return encodeURI(spotifyMetaData.title)
 }
 
-exports.grabSongDescription = (url) => {
-    const spotifyMetaData = grabity.grabIt(url);
-    return spotifyMetaData
+exports.grabSongDescription = async (url) => {
+    const spotifyMetaData = await grabity.grabIt(url);
+    return spotifyMetaData.description
 }
 
 // You got song description on following format:

@@ -11,8 +11,9 @@ class Bot {
         this.bot = new TelegramBot(token, {polling: true});
 
         this.bot.on('message', async (msg) => {
-
+            console.log(msg.text, msg.chat.id)
             const url = parsing.getLink(msg.text);
+            console.log(msg);
 
             if(!url) {
                 const log = `
