@@ -3,61 +3,68 @@ const TelegramBot = require('node-telegram-bot-api');
 const lyrics_search = require('@penfoldium/lyrics-search');
 const parsing = require('./utils/parsing')
 
-const Lyrics = new lyrics_search(process.env['GENIUS_API_TOKEN']);
+const GeniusLyrics = new lyrics_search(process.env['GENIUS_API_TOKEN']);
 const ADMIN_CHAT_ID = process.env['ADMIN_CHAT_ID'];
+const PROVIDE_LINK_MESSAGE = `Please, provide a Spotify link (e.g: https://open.spotify.com/track/...)`;
 
 class Bot {
     constructor(token) {
         this.bot = new TelegramBot(token, {polling: true});
 
         this.bot.on('message', async (msg) => {
-            console.log(msg.text, msg.chat.id)
-            const url = parsing.getLink(msg.text);
-            console.log(msg);
+            let dataLog = {
+                username: msg.chat.username,
+                name: msg.chat.first_name,
+                message: msg.text,
+            }
 
-            if(!url) {
-                const log = `
-[user]: ${msg.chat.first_name}(@${msg.chat.username})
-[msg.text]: ${msg.text} 
-[url:] ${url}
-`;
-                this.bot.sendMessage(ADMIN_CHAT_ID, log);
-                this.bot.sendMessage(msg.chat.id, 'Link not found')
+            const chatId = msg.chat.id;
+            const spotifyLink = parsing.getLink(msg.text);
+            dataLog.url = spotifyLink
+
+            if(!spotifyLink) {
+                this.log(dataLog)
+                this.bot.sendMessage(chatId, PROVIDE_LINK_MESSAGE)
                 return 0;
             }
 
-            const description = await parsing.grabSongDescription(url);
+            const spotifyDescription = await parsing.grabSpotifySongDescription(spotifyLink);
+            const geniusSearchQuery = parsing.extractSongInfo(spotifyDescription);
+            const geniusSearchResult = await GeniusLyrics.search(geniusSearchQuery);
 
-            const query = parsing.extractSongInfo(description);
-            const searchResult = await Lyrics.search(encodeURI(query));
-            const lyrics = await parsing.grabLyrics(searchResult.url);
-            const text = lyrics || searchResult.lyrics || '';
-
-            const log = `
-[user]: ${msg.chat.first_name}(@${msg.chat.username})
-[msg.text]: ${msg.text} 
-[url:] ${url}
-[description]: ${description} 
-[query]: ${query}
-[lyrics.length]: ${text.length}
-`;
-            this.bot.sendMessage(ADMIN_CHAT_ID, log);
-
-            if (text.length === 0) {
-                this.bot.sendMessage(msg.chat.id, 'Oops, something went wrong')
+            if(geniusSearchResult.lyrics){
+                this.sendLyrics(chatId, geniusSearchResult.lyrics)
                 return 0;
             }
 
-            if (text.length < 4096) {
-                this.bot.sendMessage(msg.chat.id, text)
+
+            const geniusLyrics = await parsing.grabGeniusLyrics(geniusSearchResult.url);
+
+            if (geniusLyrics.length === 0) {
+                const message = geniusSearchResult.url ? `$URL: ${geniusSearchResult.url}` : 'Lyrics not found ¯\\_(ツ)_/¯'
+                this.bot.sendMessage(chatId, message)
                 return 0;
             }
 
+            this.log(dataLog);
+            this.sendLyrics(chatId, geniusLyrics)
+        });
+    }
+
+
+    log = (data) => {
+        this.bot.sendMessage(ADMIN_CHAT_ID, JSON.stringify(data));
+    }
+
+    sendLyrics = (chatId, text) => {
+        if (text.length < 4096) {
+            this.bot.sendMessage(chatId, text)
+        } else {
             const chunks = text.match(/(.|[\r\n]){1,4095}/g);
             chunks.map(async chunk => {
-                await this.bot.sendMessage(msg.chat.id, chunk)
+                await this.bot.sendMessage(chatId, chunk)
             })
-        });
+        }
     }
 }
 

@@ -15,7 +15,7 @@ exports.grabSongTitle = async (url) => {
     return encodeURI(spotifyMetaData.title)
 }
 
-exports.grabSongDescription = async (url) => {
+exports.grabSpotifySongDescription = async (url) => {
     const spotifyMetaData = await grabity.grabIt(url);
     return spotifyMetaData.description
 }
@@ -33,10 +33,10 @@ exports.extractSongInfo = (description) => {
     const name = leftoverPosition === -1 ? title : title.slice(0, leftoverPosition)
     const artist = artists.split(',')[0]
 
-    return `${artist} ${name}`
+    return encodeURI(`${artist} ${name}`)
 }
 
-exports.grabLyrics = async (url) => {
+exports.grabGeniusLyrics = async (url) => {
     let res = await fetch(url);
     if (res.status !== 200) throw 'Something went wrong';
 
