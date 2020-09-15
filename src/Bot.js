@@ -7,10 +7,42 @@ const GeniusLyrics = new lyrics_search(process.env['GENIUS_API_TOKEN']);
 const ADMIN_CHAT_ID = process.env['ADMIN_CHAT_ID'];
 const PROVIDE_LINK_MESSAGE = `Please, provide a Spotify link (e.g: https://open.spotify.com/track/...)`;
 
+
 class Bot {
     constructor(token) {
-        this.bot = new TelegramBot(token, {polling: true});
+        this.bot = new TelegramBot(token, { polling: true });
+    }
 
+    log = (data) => {
+        this.bot.sendMessage(ADMIN_CHAT_ID, JSON.stringify(data));
+    }
+
+    sendLyrics = (chatId, text) => {
+        if (text.length < 4096) {
+            this.bot.sendMessage(chatId, text)
+        } else {
+            const chunks = text.match(/(.|[\r\n]){1,4095}/g);
+            chunks.map(async chunk => {
+                await this.bot.sendMessage(chatId, chunk)
+            })
+        }
+    }
+
+    stopPendings = () => {
+        this.bot.on('message', async (msg) => {
+            let dataLog = {
+                username: msg.chat.username,
+                name: msg.chat.first_name,
+                message: msg.text,
+            }
+
+            this.log(dataLog);
+
+        })
+    }
+
+
+    run = () => {
         this.bot.on('message', async (msg) => {
             let dataLog = {
                 username: msg.chat.username,
@@ -22,7 +54,7 @@ class Bot {
             const spotifyLink = parsing.getLink(msg.text);
             dataLog.url = spotifyLink
 
-            if(!spotifyLink) {
+            if (!spotifyLink) {
                 this.log(dataLog)
                 this.bot.sendMessage(chatId, PROVIDE_LINK_MESSAGE)
                 return 0;
@@ -32,7 +64,7 @@ class Bot {
             const geniusSearchQuery = parsing.extractSongInfo(spotifyDescription);
             const geniusSearchResult = await GeniusLyrics.search(geniusSearchQuery);
 
-            if(geniusSearchResult.lyrics){
+            if (geniusSearchResult.lyrics) {
                 this.sendLyrics(chatId, geniusSearchResult.lyrics)
                 return 0;
             }
@@ -49,22 +81,6 @@ class Bot {
             this.log(dataLog);
             this.sendLyrics(chatId, geniusLyrics)
         });
-    }
-
-
-    log = (data) => {
-        this.bot.sendMessage(ADMIN_CHAT_ID, JSON.stringify(data));
-    }
-
-    sendLyrics = (chatId, text) => {
-        if (text.length < 4096) {
-            this.bot.sendMessage(chatId, text)
-        } else {
-            const chunks = text.match(/(.|[\r\n]){1,4095}/g);
-            chunks.map(async chunk => {
-                await this.bot.sendMessage(chatId, chunk)
-            })
-        }
     }
 }
 
