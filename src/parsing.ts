@@ -1,28 +1,29 @@
-const chalk = require('chalk');
-const grabity = require('grabity');
-const cheerio = require("cheerio");
-const fetch = require("node-fetch");
+import * as cheerio from "cheerio";
+import * as chalk from "chalk";
+import fetch from "node-fetch";
+import {grabIt} from "grabity";
+import { Message } from "node-telegram-bot-api";
 
-exports.getLink = (message) => {
+export const containsLink = (message: Message) => {
     const url = RegExp('http(s):\/\/(open\.spotify\.com|music\.youtube\.com)(.*?)([ ]|$)')
-    let execArray = url.exec(message);
+    let execArray = url.exec(message.text||'');
     return execArray ? execArray[0] : null;
 }
 
-exports.grabSongTitle = async (url) => {
-    const spotifyMetaData = await grabity.grabIt(url);
+export const grabSongTitle = async (url: string) => {
+    const spotifyMetaData = await grabIt(url);
     console.log(chalk.bold.blue('Description: ', spotifyMetaData.description));
     return encodeURI(spotifyMetaData.title)
 }
 
-exports.grabSpotifySongDescription = async (url) => {
-    const spotifyMetaData = await grabity.grabIt(url);
+export const grabSpotifySongDescription = async (url: string) => {
+    const spotifyMetaData = await grabIt(url);
     return spotifyMetaData.description
 }
 
 // You got song description on following format:
 // ${songName} (feat. ${featArtist}), a song by ${artist}, ${featArtist} on Spotify
-exports.extractSongInfo = (description) => {
+export const extractSongInfo = (description: string) => {
     const [title, artists] = description.replace(' on Spotify', '').split(', a song by ')
 
     let leftoverPosition = title.indexOf(' (')
@@ -36,13 +37,13 @@ exports.extractSongInfo = (description) => {
     return encodeURI(`${artist} ${name}`)
 }
 
-exports.grabGeniusLyrics = async (url) => {
-    let res = await fetch(url);
-    if (res.status !== 200) throw 'Something went wrong';
+export const grabGeniusLyrics = async (geniusSongUrl: string) => {
+    const response = await fetch(geniusSongUrl);
+    if (response.status !== 200) throw 'Something went wrong';
 
-    res = await res.text();
+    const result = await response.text();
 
-    const $ = cheerio.load(res);
+    const $ = cheerio.load(result);
     const a = $('.lyrics')
     let b = a.text();
     return b.trim();

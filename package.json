@@ -2,26 +2,32 @@
   "name": "spotify-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "src/search.js",
+  "main": "src/index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "rm -rf ./dist && tsc && node dist/index.js",
+    "build2": "tsc"
   },
   "dependencies": {
     "@penfoldium/lyrics-search": "^2.0.3",
     "cheerio": "^1.0.0-rc.3",
     "grabity": "^1.0.5",
     "node-fetch": "^2.6.1",
-    "node-telegram-bot-api": "^0.50.0",
-    "simple-node-logger": "^18.12.24"
+    "simple-node-logger": "^18.12.24",
+    "winston": "^3.3.0",
+    "winston-daily-rotate-file": "^4.5.0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/cheerio": "^0.22.22",
+    "@types/node-fetch": "^2.5.7",
+    "@types/node-telegram-bot-api": "^0.50.3",
     "chalk": "^4.1.0",
     "dotenv": "^8.2.0",
     "jest": "^26.4.2",
     "link-preview-js": "^2.0.4",
-    "winston": "^3.3.3"
+    "node-telegram-bot-api": "^0.50.0"
   }
 }
