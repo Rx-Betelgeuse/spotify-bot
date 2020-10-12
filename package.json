@@ -5,14 +5,16 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jest",
-    "build": "rm -rf ./dist && tsc && node dist/index.js",
-    "build2": "tsc"
+    "build": "npm run clean && tsc -w",
+    "tsc": "tsc",
+    "clean": "recursive-delete \"./dist\""
   },
   "dependencies": {
     "@penfoldium/lyrics-search": "^2.0.3",
     "cheerio": "^1.0.0-rc.3",
     "grabity": "^1.0.5",
     "node-fetch": "^2.6.1",
+    "rxjs": "^6.6.3",
     "simple-node-logger": "^18.12.24",
     "winston": "^3.3.0",
     "winston-daily-rotate-file": "^4.5.0"
@@ -24,10 +26,17 @@
     "@types/cheerio": "^0.22.22",
     "@types/node-fetch": "^2.5.7",
     "@types/node-telegram-bot-api": "^0.50.3",
+    "@types/rx": "^4.1.2",
+    "@typescript-eslint/eslint-plugin": "^4.4.0",
+    "@typescript-eslint/parser": "^4.4.0",
     "chalk": "^4.1.0",
     "dotenv": "^8.2.0",
+    "eslint": "^7.11.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^6.12.0",
     "jest": "^26.4.2",
     "link-preview-js": "^2.0.4",
-    "node-telegram-bot-api": "^0.50.0"
+    "node-telegram-bot-api": "^0.50.0",
+    "prettier": "2.1.2"
   }
 }

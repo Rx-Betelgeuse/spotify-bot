@@ -1,19 +1,39 @@
-import {parseLyrics} from "./actions.js";
-import * as TelegramBot from "node-telegram-bot-api";
-import {Message} from "node-telegram-bot-api";
-import * as dotenv from "dotenv";
-import * as path from "path";
+import * as dotenv from 'dotenv';
+import * as TelegramBot from 'node-telegram-bot-api';
+import { Message } from 'node-telegram-bot-api';
+import { from, of, Subject } from 'rxjs';
+import { catchError, filter, map, retry, switchMap, tap } from 'rxjs/operators';
 
-dotenv.config({path: __dirname + '/.env'})
+import { parseLyrics } from './actions';
+import { messagesLogger } from './logger';
 
-const token = process.env['BOT_TOKEN'];
-const bot = new TelegramBot('1248216668:AAGqvoMHpu3GFmiDMm_i7bXRiN3nfOndWrM', { polling: true });
-const url = RegExp('http(s):\/\/(open\.spotify\.com|music\.youtube\.com)(.*?)([ ]|$)')
+dotenv.config({ path: __dirname + '/.env' });
 
-const checkMessage = (message: Message, match: RegExpExecArray | null) => {
-    if(match) {
-        parseLyrics(bot, message, match[0]);
-    }
-};
+const bot = new TelegramBot('1248216668:AAGqvoMHpu3GFmiDMm_i7bXRiN3nfOndWrM', {
+  polling: true,
+});
 
-bot.onText(url, checkMessage);
+const url = RegExp(
+  'http(s)://(link.tospotify.com|open.spotify.com\/track\/|music.youtube.com)(.*?)([ ]|$)',
+);
+
+const messagesStream = new Subject<{ message: Message, match: string }>();
+
+messagesStream.pipe(
+  filter(({ match }) => !!match),
+  switchMap(({ message, match }) => parseLyrics(match)
+    .pipe(retry(5), map(lyrics => { return {  message, lyrics } }))),    
+  catchError(error => { console.log('error', error); return of(error) }),
+  switchMap(({ message, lyrics }) => from(
+    bot.sendMessage(
+      message?.chat?.id,
+      lyrics
+    ),
+  )),
+  tap((info) => messagesLogger.info(info)),
+).subscribe(() => { })
+
+bot.onText(
+  url,
+  (message, match) => messagesStream.next({ message, match: match ? match[0] : '' })  
+);

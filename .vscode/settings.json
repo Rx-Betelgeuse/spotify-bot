@@ -1,0 +1,17 @@
+{
+    "files.autoGuessEncoding": true,
+    "files.autoSave": "afterDelay",
+    "files.simpleDialog.enable": true,
+    "workbench.editor.highlightModifiedTabs": true,
+    "cSpell.words": [
+        "ESNEXT"
+    ],
+    "cSpell.languageSettings": [
+    
+    ],
+    "eslint.enable": false,
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
+    "powershell.codeFormatting.pipelineIndentationStyle": "IncreaseIndentationAfterEveryPipeline",
+    "powershell.codeFormatting.trimWhitespaceAroundPipe": true
+}

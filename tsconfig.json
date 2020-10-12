@@ -1,15 +1,22 @@
 {
     "compilerOptions": {
+        "baseUrl": "./",
         "allowJs": true,
         "module": "commonjs",
         "outDir": "./dist",
         "strict": true,
-        "target": "ES2017",
+        "target": "ES2017",    
+        "incremental": false,    
         "typeRoots": [
+            "types",
             "node_modules/@types",
-            "types"
-        ]
+        ],
+        "paths": {
+            "@penfoldium/lyrics-search":["types/lyrics-search.d.ts"],
+            "grabity":["types/grabity.d.ts"]
+        }
     },
+    "declaration": true,
     "exclude": [
         "dist",
         "node_modules"
